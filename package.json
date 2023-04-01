@@ -45,5 +45,10 @@
     "extends": [
       "github>ocavue/config-renovate"
     ]
+  },
+  "dependencies": {
+    "y-prosemirror": "^1.2.0",
+    "y-protocols": "^1.0.5",
+    "yjs": "^13.5.51"
   }
 }
