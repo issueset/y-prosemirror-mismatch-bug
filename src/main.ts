@@ -137,9 +137,9 @@ function logState(prefix: string) {
   const pmStr = getPmString()
 
   if (yjsStr === pmStr) {
-    console.log(`${prefix}\t yjs == pm:\t`, yjsStr)
+    console.log(`${prefix}\t yjs and pm is match :)\t`, yjsStr)
   } else {
-    console.warn(`${prefix}\t ⚠️ found mismatch`)
+    console.warn(`${prefix}\t yjs and pm is mismatch :(`)
     console.log(`${prefix}\t yjs:\t`, yjsStr)
     console.log(`${prefix}\t pm: \t`, pmStr)
   }
@@ -173,12 +173,13 @@ function update() {
   view.dispatch(tr)
 }
 
+let clickCount = 0
 async function handleButtonClick() {
-  logState('before update')
+  clickCount++
   await sleep(500)
   update()
   await sleep(500)
-  logState('after update')
+  logState(`[after ${clickCount}th click]`)
 }
 
 const button = document.getElementById('button-id')!
