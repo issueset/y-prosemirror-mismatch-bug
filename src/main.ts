@@ -92,7 +92,7 @@ const yjsDoc = prosemirrorJSONToYDoc(mySchema, JSON1)
 const yjsType = yjsDoc.get('prosemirror', Y.XmlFragment) as Y.XmlFragment
 
 const loggingPlugin = new Plugin({
-  appendTransaction: (transactions, oldState, newState) => {
+  appendTransaction: (transactions) => {
     console.log('transactions:', transactions.length)
     transactions.forEach((tr) => {
       console.log('steps:', tr.steps.length)
@@ -107,7 +107,7 @@ const loggingPlugin = new Plugin({
 const plugins = [
   ...exampleSetup({ schema: mySchema }),
   ySyncPlugin(yjsType),
-  loggingPlugin,
+  // loggingPlugin,
 ]
 
 const view = new EditorView(document.querySelector('#editor'), {
@@ -133,13 +133,19 @@ function sleep(ms: number) {
 }
 
 function logState(prefix: string) {
-  console.log(`${prefix} yjs:`, getYjsString())
-  console.log(`${prefix} pm: `, getPmString())
+  const yjsStr = getYjsString()
+  const pmStr = getPmString()
+
+  if (yjsStr === pmStr) {
+    console.log(`${prefix}\t yjs == pm:\t`, yjsStr)
+  } else {
+    console.warn(`${prefix}\t ⚠️ found mismatch`)
+    console.log(`${prefix}\t yjs:\t`, yjsStr)
+    console.log(`${prefix}\t pm: \t`, pmStr)
+  }
 }
 
-async function handleButtonClick() {
-  await sleep(1000)
-
+function update() {
   const tr = view.state.tr
 
   const currJSON = view.state.doc.toJSON()
@@ -165,15 +171,20 @@ async function handleButtonClick() {
     console.error("can't handle this case. Please restart the editor")
   }
   view.dispatch(tr)
-  await sleep(2000)
+}
 
-  logState('after')
+async function handleButtonClick() {
+  logState('before update')
+  await sleep(500)
+  update()
+  await sleep(500)
+  logState('after update')
 }
 
 const button = document.getElementById('button-id')!
 
 button.addEventListener('click', handleButtonClick)
-button.addEventListener('mousedown', (event) => {
-  event.preventDefault()
-})
+button.addEventListener('mousedown', (event) => event.preventDefault())
+
+// For debug
 ;(window as any).view = view
