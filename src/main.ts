@@ -26,40 +26,27 @@ const JSON1 = {
   type: 'doc',
   content: [
     {
-      type: 'list',
-      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
+      type: 'blockquote',
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A' }] }],
     },
     {
-      type: 'list',
-      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
+      type: 'blockquote',
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'B' }] }],
     },
     {
-      type: 'list',
-      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
+      type: 'blockquote',
       content: [
         { type: 'paragraph' },
         {
-          type: 'list',
-          attrs: {
-            kind: 'bullet',
-            order: null,
-            checked: false,
-            collapsed: false,
-          },
+          type: 'blockquote',
+
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'C' }] },
           ],
         },
         {
-          type: 'list',
-          attrs: {
-            kind: 'bullet',
-            order: null,
-            checked: false,
-            collapsed: false,
-          },
+          type: 'blockquote',
+
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'D' }] },
           ],
@@ -73,45 +60,28 @@ const JSON2 = {
   type: 'doc',
   content: [
     {
-      type: 'list',
-      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
+      type: 'blockquote',
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A' }] }],
     },
     {
-      type: 'list',
-      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
+      type: 'blockquote',
       content: [
         { type: 'paragraph', content: [{ type: 'text', text: 'B' }] },
         {
-          type: 'list',
-          attrs: {
-            kind: 'bullet',
-            order: null,
-            checked: false,
-            collapsed: false,
-          },
+          type: 'blockquote',
+
           content: [{ type: 'paragraph' }],
         },
         {
-          type: 'list',
-          attrs: {
-            kind: 'bullet',
-            order: null,
-            checked: false,
-            collapsed: false,
-          },
+          type: 'blockquote',
+
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'C' }] },
           ],
         },
         {
-          type: 'list',
-          attrs: {
-            kind: 'bullet',
-            order: null,
-            checked: false,
-            collapsed: false,
-          },
+          type: 'blockquote',
+
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'D' }] },
           ],
@@ -190,7 +160,7 @@ async function handleButtonClick() {
 
   if (isEqual(currJSON, JSON1)) {
     const step1JSON =
-      '{"stepType":"replaceAround","from":11,"to":13,"gapFrom":11,"gapTo":13,"insert":1,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}]},"structure":true}'
+      '{"stepType":"replaceAround","from":11,"to":13,"gapFrom":11,"gapTo":13,"insert":1,"slice":{"content":[{"type":"blockquote"}]},"structure":true}'
     const step2JSON = '{"stepType":"replace","from":9,"to":11,"structure":true}'
     const step1 = Step.fromJSON(mySchema, JSON.parse(step1JSON))
     const step2 = Step.fromJSON(mySchema, JSON.parse(step2JSON))
@@ -198,9 +168,9 @@ async function handleButtonClick() {
     tr.step(step2)
   } else if (isEqual(currJSON, JSON2)) {
     const step1JSON =
-      '{"stepType":"replaceAround","from":12,"to":23,"gapFrom":13,"gapTo":23,"insert":0,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}],"openStart":1},"structure":true}'
+      '{"stepType":"replaceAround","from":12,"to":23,"gapFrom":13,"gapTo":23,"insert":0,"slice":{"content":[{"type":"blockquote"}],"openStart":1},"structure":true}'
     const step2JSON =
-      '{"stepType":"replaceAround","from":9,"to":24,"gapFrom":9,"gapTo":23,"insert":1,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}],"openStart":1},"structure":true}'
+      '{"stepType":"replaceAround","from":9,"to":24,"gapFrom":9,"gapTo":23,"insert":1,"slice":{"content":[{"type":"blockquote"}],"openStart":1},"structure":true}'
     const step1 = Step.fromJSON(mySchema, JSON.parse(step1JSON))
     const step2 = Step.fromJSON(mySchema, JSON.parse(step2JSON))
     tr.step(step1)
