@@ -1,15 +1,8 @@
-import 'prosemirror-flat-list/style.css'
 import './style.css'
 
 import { isEqual } from 'lodash-es'
 import { exampleSetup } from 'prosemirror-example-setup'
-import {
-  createListPlugins,
-  createListSpec,
-  listKeymap,
-} from 'prosemirror-flat-list'
-import { keymap } from 'prosemirror-keymap'
-import { DOMParser, Schema } from 'prosemirror-model'
+import { DOMParser } from 'prosemirror-model'
 import { schema } from 'prosemirror-schema-basic'
 import { EditorState, Plugin } from 'prosemirror-state'
 import { Step } from 'prosemirror-transform'
@@ -93,15 +86,10 @@ const JSON2 = {
 
 // Mix the nodes from prosemirror-schema-list into the basic schema to
 // create a schema with list support.
-const mySchema = new Schema({
-  nodes: schema.spec.nodes.append({ list: createListSpec() }),
-  marks: schema.spec.marks,
-})
+const mySchema = schema
 
 const yjsDoc = prosemirrorJSONToYDoc(mySchema, JSON1)
 const yjsType = yjsDoc.get('prosemirror', Y.XmlFragment) as Y.XmlFragment
-
-const listKeymapPlugin = keymap(listKeymap)
 
 const loggingPlugin = new Plugin({
   appendTransaction: (transactions, oldState, newState) => {
@@ -117,10 +105,8 @@ const loggingPlugin = new Plugin({
 })
 
 const plugins = [
-  listKeymapPlugin,
   ...exampleSetup({ schema: mySchema }),
   ySyncPlugin(yjsType),
-  ...createListPlugins({ schema: mySchema }),
   loggingPlugin,
 ]
 
