@@ -1,45 +1,65 @@
+import 'prosemirror-flat-list/style.css'
 import './style.css'
 
-import { EditorState } from 'prosemirror-state'
-import { EditorView } from 'prosemirror-view'
-import { Schema, DOMParser, Slice } from 'prosemirror-model'
-import { schema } from 'prosemirror-schema-basic'
-import { addListNodes } from 'prosemirror-schema-list'
+import { isEqual } from 'lodash-es'
 import { exampleSetup } from 'prosemirror-example-setup'
 import {
-  ySyncPlugin,
-  yDocToProsemirror,
+  createListPlugins,
+  createListSpec,
+  listKeymap,
+} from 'prosemirror-flat-list'
+import { keymap } from 'prosemirror-keymap'
+import { DOMParser, Schema } from 'prosemirror-model'
+import { schema } from 'prosemirror-schema-basic'
+import { EditorState, Plugin } from 'prosemirror-state'
+import { Step } from 'prosemirror-transform'
+import { EditorView } from 'prosemirror-view'
+import {
   prosemirrorJSONToYDoc,
+  yDocToProsemirror,
+  ySyncPlugin,
 } from 'y-prosemirror'
+
 import * as Y from 'yjs'
 
 const JSON1 = {
   type: 'doc',
   content: [
     {
-      type: 'heading',
-      content: [{ type: 'text', text: 'Hello world' }],
-    },
-    {
-      type: 'blockquote',
+      type: 'list',
+      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A' }] }],
     },
     {
-      type: 'blockquote',
+      type: 'list',
+      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'B' }] }],
     },
     {
-      type: 'blockquote',
+      type: 'list',
+      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
       content: [
         { type: 'paragraph' },
         {
-          type: 'blockquote',
+          type: 'list',
+          attrs: {
+            kind: 'bullet',
+            order: null,
+            checked: false,
+            collapsed: false,
+          },
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'C' }] },
           ],
         },
         {
-          type: 'blockquote',
+          type: 'list',
+          attrs: {
+            kind: 'bullet',
+            order: null,
+            checked: false,
+            collapsed: false,
+          },
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'D' }] },
           ],
@@ -53,29 +73,45 @@ const JSON2 = {
   type: 'doc',
   content: [
     {
-      type: 'heading',
-      content: [{ type: 'text', text: 'Hello world' }],
-    },
-    {
-      type: 'blockquote',
+      type: 'list',
+      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
       content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A' }] }],
     },
     {
-      type: 'blockquote',
+      type: 'list',
+      attrs: { kind: 'bullet', order: null, checked: false, collapsed: false },
       content: [
         { type: 'paragraph', content: [{ type: 'text', text: 'B' }] },
         {
-          type: 'blockquote',
+          type: 'list',
+          attrs: {
+            kind: 'bullet',
+            order: null,
+            checked: false,
+            collapsed: false,
+          },
           content: [{ type: 'paragraph' }],
         },
         {
-          type: 'blockquote',
+          type: 'list',
+          attrs: {
+            kind: 'bullet',
+            order: null,
+            checked: false,
+            collapsed: false,
+          },
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'C' }] },
           ],
         },
         {
-          type: 'blockquote',
+          type: 'list',
+          attrs: {
+            kind: 'bullet',
+            order: null,
+            checked: false,
+            collapsed: false,
+          },
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'D' }] },
           ],
@@ -88,14 +124,35 @@ const JSON2 = {
 // Mix the nodes from prosemirror-schema-list into the basic schema to
 // create a schema with list support.
 const mySchema = new Schema({
-  nodes: addListNodes(schema.spec.nodes, 'paragraph block*', 'block'),
+  nodes: schema.spec.nodes.append({ list: createListSpec() }),
   marks: schema.spec.marks,
 })
 
 const yjsDoc = prosemirrorJSONToYDoc(mySchema, JSON1)
 const yjsType = yjsDoc.get('prosemirror', Y.XmlFragment) as Y.XmlFragment
 
-const plugins = [...exampleSetup({ schema: mySchema }), ySyncPlugin(yjsType)]
+const listKeymapPlugin = keymap(listKeymap)
+
+const loggingPlugin = new Plugin({
+  appendTransaction: (transactions, oldState, newState) => {
+    console.log('transactions:', transactions.length)
+    transactions.forEach((tr) => {
+      console.log('steps:', tr.steps.length)
+      tr.steps.forEach((step) => {
+        console.log(JSON.stringify(step.toJSON()))
+      })
+    })
+    return null
+  },
+})
+
+const plugins = [
+  listKeymapPlugin,
+  ...exampleSetup({ schema: mySchema }),
+  ySyncPlugin(yjsType),
+  ...createListPlugins({ schema: mySchema }),
+  loggingPlugin,
+]
 
 const view = new EditorView(document.querySelector('#editor'), {
   state: EditorState.create({
@@ -119,23 +176,48 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function logState(prefix: string) {
+  console.log(`${prefix} yjs:`, getYjsString())
+  console.log(`${prefix} pm: `, getPmString())
+}
+
 async function handleButtonClick() {
-  console.log('before yjs:', getYjsString())
-  console.log('before pm: ', getPmString())
   await sleep(1000)
 
   const tr = view.state.tr
-  const newContent = mySchema.nodeFromJSON(JSON2).content
-  const newSlice = new Slice(newContent, 0, 0)
-  tr.replace(0, tr.doc.content.size, newSlice)
-  view.dispatch(tr)
 
-  await sleep(1000)
-  console.log('after yjs:', getYjsString())
-  console.log('after pm: ', getPmString())
+  const currJSON = view.state.doc.toJSON()
+
+  if (isEqual(currJSON, JSON1)) {
+    const step1JSON =
+      '{"stepType":"replaceAround","from":11,"to":13,"gapFrom":11,"gapTo":13,"insert":1,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}]},"structure":true}'
+    const step2JSON = '{"stepType":"replace","from":9,"to":11,"structure":true}'
+    const step1 = Step.fromJSON(mySchema, JSON.parse(step1JSON))
+    const step2 = Step.fromJSON(mySchema, JSON.parse(step2JSON))
+    tr.step(step1)
+    tr.step(step2)
+  } else if (isEqual(currJSON, JSON2)) {
+    const step1JSON =
+      '{"stepType":"replaceAround","from":12,"to":23,"gapFrom":13,"gapTo":23,"insert":0,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}],"openStart":1},"structure":true}'
+    const step2JSON =
+      '{"stepType":"replaceAround","from":9,"to":24,"gapFrom":9,"gapTo":23,"insert":1,"slice":{"content":[{"type":"list","attrs":{"kind":"bullet","order":null,"checked":false,"collapsed":false}}],"openStart":1},"structure":true}'
+    const step1 = Step.fromJSON(mySchema, JSON.parse(step1JSON))
+    const step2 = Step.fromJSON(mySchema, JSON.parse(step2JSON))
+    tr.step(step1)
+    tr.step(step2)
+  } else {
+    console.error("can't handle this case. Please restart the editor")
+  }
+  view.dispatch(tr)
+  await sleep(2000)
+
+  logState('after')
 }
 
 const button = document.getElementById('button-id')!
 
 button.addEventListener('click', handleButtonClick)
+button.addEventListener('mousedown', (event) => {
+  event.preventDefault()
+})
 ;(window as any).view = view
